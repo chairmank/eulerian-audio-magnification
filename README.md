@@ -8,7 +8,16 @@ Requirements
 ------------
 You need virtualenv and pip.
 
-You also need a bunch of dependencies to install NumPy and matplotlib.
+You also need a bunch of dependencies to install NumPy and SciPy and
+matplotlib.
+
+SciPy requires you to export two environment variables:
+
+export BLAS=/path/to/your/libfblas.a
+export LAPACK=/path/to/your/libflapack.a
+
+Follow instructions at
+http://www.scipy.org/Installing_SciPy/BuildingGeneral
 
 Getting started
 ---------------
