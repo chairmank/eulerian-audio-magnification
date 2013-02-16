@@ -40,3 +40,24 @@ def stft(signal, window=1024, step=None, n=None):
     for (i, s) in enumerate(window_slice_iterator(length, window, step)):
         out[i, :] = np.fft.fft(signal[s], n)
     return out
+
+def stft_svd(signal, **kwargs):
+    """Decompose the short-time Fourier transform of a signal using
+    singular value decomposition.
+    """
+    spectrogram = stft(signal, **kwargs)
+    # SVD of the spectrogram:
+    #   u.shape == (num_windows, n)
+    #   s.shape == (k, k)
+    #   v.shape == (k, n)
+    #   spectrogram is approximated by np.dot(u, np.dot(s[:, np.newaxis], v))
+    # where
+    #   k == min(num_windows, n)
+    k = min(*spectrogram.shape)
+    (left, sv, right) = np.linalg.svd(spectrogram, full_matrices=False)
+    scaled_right = np.dot(s[:, np.newaxis], v)
+    components = [
+        np.dot(u[:, slice(i, i + 1)], scaled_right[slice(i, i + 1), :])
+        for i in xrange(k)]
+    # spectrogram is approximated by sum(components)
+    return components
