@@ -8,8 +8,7 @@ Requirements
 ------------
 You need virtualenv and pip.
 
-You also need libsndfile (for scikits.audiolab) and a bunch of
-dependencies to install NumPy.
+You also need a bunch of dependencies to install NumPy and matplotlib.
 
 Getting started
 ---------------
