@@ -12,7 +12,7 @@ def window_slice_iterator(length, window, step):
     Yields slice objects of length *window*. Any remainder at the end is
     unceremoniously truncated.
     """
-    num_windows = _num_windows(length, window, step):
+    num_windows = _num_windows(length, window, step)
     for i in xrange(num_windows):
         start = step * i
         end = start + window
