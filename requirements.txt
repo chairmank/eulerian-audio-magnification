@@ -1,0 +1,3 @@
+numpy==1.7.0
+scipy==0.11.0
+scikits.audiolab==0.11.0
