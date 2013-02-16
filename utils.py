@@ -38,5 +38,5 @@ def stft(signal, window=1024, step=None, n=None):
     num_windows = _num_windows(length, window, step)
     out = np.zeros((num_windows, n), dtype=np.complex64)
     for (i, s) in enumerate(window_slice_iterator(length, window, step)):
-        out[i, :] = np.fft(signal[s], n)
+        out[i, :] = np.fft.fft(signal[s], n)
     return out
