@@ -39,10 +39,16 @@ if __name__ == '__main__':
     resynth = utils.resynthesize(unwhitened)
     wavfile.write("resynth.wav", int(2 * nyq), resynth)
 
-    print "computing truncated spectrogram after singular value decomposition"
-    truncated_spectrogram = utils.svd_truncation(spectrogram, k=[0])
+    print "computing truncated whitened spectrogram after singular value decomposition"
+    #k = [0]
+    k = range(20)
+    truncated_whitened_spectrogram = utils.svd_truncation(whitened, k=k)
 
-    print "resynthesizing from truncated spectrogram"
+    print "unwhitening truncated spectrum"
+    truncated_spectrogram = truncated_whitened_spectrogram * np.sqrt(power)
+    truncated_spectrogram = utils.normalize_total_power(truncated_spectrogram, utils.total_power(spectrogram))
+
+    print "resynthesizing from unwhitened truncated spectrogram"
     truncated_resynth = utils.resynthesize(truncated_spectrogram)
     wavfile.write("resynth_truncated.wav", int(2 * nyq), truncated_resynth)
 
