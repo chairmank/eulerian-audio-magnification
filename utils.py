@@ -88,14 +88,15 @@ def svd_truncation(spectrogram, k=[0]):
     """Compute SVD of the spectrogram, trunate to *k* components,
     reconstitute a new spectrogram."""
     # SVD of the spectrogram:
-    #   u.shape == (num_windows, n)
+    #   u.shape == (num_windows, k)
     #   s.shape == (k, k)
     #   v.shape == (k, n)
     # where
     #   k == min(num_windows, n)
     (left, sv, right) = np.linalg.svd(spectrogram, full_matrices=False)
     zero_out = np.array([i for i in xrange(sv.size) if i not in k])
-    sv[zero_out] = 0.0
+    if zero_out.size:
+        sv[zero_out] = 0.0
     truncated = np.dot(left, sv[:, np.newaxis] * right)
     return truncated
 
@@ -115,9 +116,6 @@ def estimate_spectral_power(spectrogram):
     power = np.power(np.abs(spectrogram), 2).mean(axis=0)
     return power
 
-
-def whitening_filter(signal, nyq=default_nyquist, band=[20, 20000]):
-    pass
 
 
 def bandpass_filter_signal(signal, low, high, nyq=default_nyquist):

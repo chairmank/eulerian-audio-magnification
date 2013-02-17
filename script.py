@@ -41,8 +41,9 @@ if __name__ == '__main__':
     wavfile.write("resynth.wav", int(2 * nyq), resynth)
 
     print "computing truncated whitened spectrogram after singular value decomposition"
-    #k = [0]
-    k = range(20)
+    k = [0]
+    #k = range(20)
+    #k = range(1024)
     truncated_whitened_spectrogram = utils.svd_truncation(whitened, k=k)
 
     print "unwhitening truncated spectrum"
