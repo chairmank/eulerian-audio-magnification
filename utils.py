@@ -81,28 +81,24 @@ def resynthesize(spectrogram, window=1024, step=None, n=None):
         snippet = np.real(np.fft.ifft(spectrogram[i, :], window))
         signal[(step * i):(step * i + window)] += snippet
     signal = 0.85 * signal
+    signal = signal.astype(np.int16)
     return signal
 
 
-def stft_svd(signal, **kwargs):
-    """Decompose the short-time Fourier transform of a signal using
-    singular value decomposition.
-    """
-    spectrogram = stft(signal, **kwargs)
+def svd_truncation(spectrogram, k=[0]):
+    """Compute SVD of the spectrogram, trunate to *k* components,
+    reconstitute a new spectrogram."""
     # SVD of the spectrogram:
     #   u.shape == (num_windows, n)
     #   s.shape == (k, k)
     #   v.shape == (k, n)
     # where
     #   k == min(num_windows, n)
-    k = min(*spectrogram.shape)
     (left, sv, right) = np.linalg.svd(spectrogram, full_matrices=False)
-    scaled_right = (sv[:, np.newaxis] * right)
-    # spectrogram is approximated by sum(components)
-    components = (
-        np.dot(left[:, slice(i, i + 1)], scaled_right[slice(i, i + 1), :])
-        for i in xrange(k))
-    return components
+    zero_out = np.array([i for i in xrange(sv.size) if i not in k])
+    sv[zero_out] = 0.0
+    truncated = np.dot(left, sv[:, np.newaxis] * right)
+    return truncated
 
 
 def estimate_power_spectrum(signal, **kwargs):
