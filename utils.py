@@ -94,9 +94,9 @@ def amplify_pyramid(pyr, passband, fs, gain=5.0):
     amplified_pyr = np.copy(pyr)
     for i in xrange(num_freqs):
         for j in xrange(levels):
-            real_component = filtfilt(tap, [1.0], np.real(pyr[:, i, j]))
-            imag_component = filtfilt(tap, [1.0], np.imag(pyr[:, i, j]))
-            amplified_pyr[:, i, j] += gain * (real_component + 1.0j * imag_component)
+            amplitude = gain * filtfilt(tap, [1.0], np.abs(pyr[:, i, j]))
+            theta = np.angle(pyr[:, i, j])
+            amplified_pyr[:, i, j] += amplitude * np.exp(1.0j * theta)
     return amplified_pyr
 
 def resynthesize(spectrogram, window=1024, step=None, n=None):
