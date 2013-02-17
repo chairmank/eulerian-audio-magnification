@@ -100,8 +100,11 @@ def svd_truncation(spectrogram, k=[0]):
     return truncated
 
 
-def estimate_power_spectrum(signal, **kwargs):
-    return np.power(np.abs(stft(signal, **kwargs)), 2).mean(axis=0)
+def estimate_spectral_power(spectrogram):
+    """Given a spectrogram, compute power for each frequency band."""
+    # compute mean power at each frequency
+    power = np.power(np.abs(spectrogram), 2).mean(axis=0)
+    return power
 
 
 def whitening_filter(signal, nyq=default_nyquist, band=[20, 20000]):
