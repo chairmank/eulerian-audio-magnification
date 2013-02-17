@@ -100,6 +100,15 @@ def svd_truncation(spectrogram, k=[0]):
     return truncated
 
 
+def total_power(spectrogram):
+    return np.power(np.abs(spectrogram), 2).sum()
+
+
+def normalize_total_power(spectrogram, total):
+    unit_power = spectrogram / np.sqrt(total_power(spectrogram))
+    return unit_power * np.sqrt(total)
+
+
 def estimate_spectral_power(spectrogram):
     """Given a spectrogram, compute power for each frequency band."""
     # compute mean power at each frequency
