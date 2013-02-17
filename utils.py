@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.io import wavfile
-from scipy.signal import firwin, lfilter
+from scipy.signal import firwin, lfilter, hamming
 
 default_nyquist = 22050.0
 
@@ -43,7 +43,7 @@ def stft(signal, window=1024, step=None, n=None):
     frequency.
     """
     if step is None:
-        step = window
+        step = window / 2
     if n is None:
         n = window
     if signal.ndim != 1:
@@ -51,9 +51,33 @@ def stft(signal, window=1024, step=None, n=None):
     length = signal.size
     num_windows = _num_windows(length, window, step)
     out = np.zeros((num_windows, n), dtype=np.complex64)
+    taper = hamming(window)
     for (i, s) in enumerate(window_slice_iterator(length, window, step)):
-        out[i, :] = np.fft.fft(signal[s], 2 * n)[:n]
+        out[i, :] = np.fft.fft(signal[s] * taper, 2 * n)[:n]
     return out
+
+def resynthesize(spectrogram, window=1024, step=None, n=None):
+    """Compute the short-time Fourier transform on a 1-dimensional array
+    *signal*, with the specified *window* size, *step* size, and
+    *n*-resolution FFT.
+
+    This function returns a 2-dimensional array of complex floats. The
+    0th dimension is time (window steps) and the 1th dimension is
+    frequency.
+    """
+    if step is None:
+        step = window / 2
+    if n is None:
+        n = window
+    if spectrogram.ndim != 2:
+        raise ValueError("spectrogram must be a 2-dimensional array")
+    (num_windows, num_freqs) = spectrogram.shape
+    length = step * (num_windows - 1) + window
+    signal = np.zeros((length,))
+    for i in xrange(num_windows):
+        snippet = np.real(np.fft.ifft(spectrogram[i, :], window))
+        signal[(step * i):(step * i + window)] += snippet
+    return signal
 
 
 def stft_svd(signal, **kwargs):
