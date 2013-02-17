@@ -5,12 +5,12 @@ from scipy.signal import firwin, lfilter
 default_nyquist = 22050.0
 
 
-def slurp_wav(path, n=(1024 * 10)):
+def slurp_wav(path, n=(44100 * 10)):
     """Read first *n* samples from the 0th channel of a WAV file
     specified by *path*."""
-    # For expediency, just pull one channel
     (fs, signal) = wavfile.read(path)
     nyq = fs / 2.0
+    # For expediency, just pull one channel
     signal = signal[:n, 0]
     return (nyq, signal)
 
