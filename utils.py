@@ -12,7 +12,7 @@ def slurp_wav(path, n=(44100 * 10)):
     nyq = fs / 2.0
     # For expediency, just pull one channel
     if signal.ndim > 1:
-        signal = signal = signal[:, 0]
+        signal = signal[:, 0]
     n = min(n, signal.size)
     signal = signal[:n]
     return (nyq, signal)
@@ -56,7 +56,7 @@ def stft(signal, window=1024, step=None, n=None):
     out = np.zeros((num_windows, n), dtype=np.complex64)
     taper = hamming(window)
     for (i, s) in enumerate(window_slice_iterator(length, window, step)):
-        out[i, :] = np.fft.fft(signal[s] * taper, 2 * n)[:n]
+        out[i, :] = np.fft.fft(signal[s] * taper, n)
     return out
 
 def resynthesize(spectrogram, window=1024, step=None, n=None):
