@@ -25,6 +25,9 @@ class Clip:
     def __init__(self, path, start=0, end=None):
         """Read samples from the 0th channel of a WAV file specified by
         *path*."""
+        if path is None:
+            return
+
         (fs, self.signal) = wavfile.read(path)
         self.nyq = fs / 2.0
 
@@ -36,8 +39,6 @@ class Clip:
             self.signal = self.signal[start:]
         else:
             self.signal = self.signal[start:end]
-
-        self.original = self.signal[:]
 
     def write(self, path):
         wavfile.write(path, int(2 * self.nyq), self.signal)
@@ -52,6 +53,8 @@ class Spectrogram:
         0th dimension is time (window steps) and the 1th dimension is
         frequency.
         """
+        if clip is None:
+            return
         
         if step is None:
             step = window / 2
@@ -59,9 +62,7 @@ class Spectrogram:
             n = window
 
         signal = clip.signal
-        self.window = window
-        self.step = step
-        self.n = n
+        self.params = (window, step, n, clip.nyq)
 
         if signal.ndim != 1:
             raise ValueError("signal must be a 1-dimensional array")
@@ -75,14 +76,21 @@ class Spectrogram:
 
     def resynthesize(self):
         spectrogram = self.data
+        (window, step, n, nyq) = self.params
+
         if self.data.ndim != 2:
             raise ValueError("spectrogram must be a 2-dimensional array")
         (num_windows, num_freqs) = spectrogram.shape
-        length = self.step * (num_windows - 1) + self.window
+        length = step * (num_windows - 1) + window
         signal = np.zeros((length,))
         for i in xrange(num_windows):
-            snippet = np.real(np.fft.ifft(spectrogram[i, :], self.window))
-            signal[(self.step * i):(self.step * i + self.window)] += snippet
+            snippet = np.real(np.fft.ifft(spectrogram[i, :], window))
+            signal[(step * i):(step * i + window)] += snippet
         signal = signal / np.max(np.abs(signal)) * 0x8000 * 0.9
         signal = signal.astype(np.int16)
-        return signal
+
+        clip = Clip(None)
+        clip.signal = signal
+        clip.nyq = nyq
+
+        return clip
