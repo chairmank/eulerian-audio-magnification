@@ -5,12 +5,12 @@ import numpy as np
 import utils
 
 if __name__ == '__main__':
-    (nyq, signal) = utils.slurp_wav("Queen_mono.wav", 44100 * 20)
+    (nyq, signal) = utils.slurp_wav("Queen_mono.wav", 44100 * 13, 44100 * 20)
     print "computing spectrogram"
     spectrogram = utils.stft(signal)
 
     print "computing truncated spectrogram after singular value decomposition"
-    truncated_spectrogram = utils.svd_truncation(spectrogram, k=20)
+    truncated_spectrogram = utils.svd_truncation(spectrogram, k=[0])
 
     print "resynthesizing from spectrogram"
     # resynthesize without any modifications

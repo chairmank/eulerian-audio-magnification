@@ -5,16 +5,15 @@ from scipy.signal import firwin, lfilter, hamming
 default_nyquist = 22050.0
 
 
-def slurp_wav(path, n=(44100 * 10)):
-    """Read first *n* samples from the 0th channel of a WAV file
-    specified by *path*."""
+def slurp_wav(path, start=0, end=(44100 * 10)):
+    """Read samples from the 0th channel of a WAV file specified by
+    *path*."""
     (fs, signal) = wavfile.read(path)
     nyq = fs / 2.0
     # For expediency, just pull one channel
     if signal.ndim > 1:
         signal = signal[:, 0]
-    n = min(n, signal.size)
-    signal = signal[:n]
+    signal = signal[start:end]
     return (nyq, signal)
 
 
