@@ -2,7 +2,7 @@ import numpy as np
 from scipy.io import wavfile
 from scipy.signal import firwin, lfilter
 
-default_nyquist = 22050
+default_nyquist = 22050.0
 
 
 def slurp_wav(path, n=(1024 * 10)):
@@ -10,7 +10,7 @@ def slurp_wav(path, n=(1024 * 10)):
     specified by *path*."""
     # For expediency, just pull one channel
     (fs, signal) = wavfile.read(path)
-    nyq = fs / 2
+    nyq = fs / 2.0
     signal = signal[:n, 0]
     return (nyq, signal)
 
@@ -87,7 +87,7 @@ def whitening_filter(signal, nyq=default_nyquist, band=[20, 20000]):
 
 def bandpass_filter_signal(signal, low, high, nyq=default_nyquist):
     taps = firwin(1024, [low, high], nyq=nyq, pass_zero=False)
-    filtered_signal = lfilter(taps, [1.0], signal)
+    filtered_signal = lfilter(taps, [1.0], signal).astype(np.int16)
     return filtered_signal
 
 
