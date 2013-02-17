@@ -11,7 +11,10 @@ def slurp_wav(path, n=(44100 * 10)):
     (fs, signal) = wavfile.read(path)
     nyq = fs / 2.0
     # For expediency, just pull one channel
-    signal = signal[:n, 0]
+    if signal.ndim > 1:
+        signal = signal = signal[:, 0]
+    n = min(n, signal.size)
+    signal = signal[:n]
     return (nyq, signal)
 
 
