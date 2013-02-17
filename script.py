@@ -43,9 +43,17 @@ if __name__ == '__main__':
     resynth = utils.resynthesize(unwhitened)
     wavfile.write("resynth.wav", int(2 * nyq), resynth)
 
-    print "resynthesizing spectrogram from Laplacian pyramid"
-    pyr = utils.stft_laplacian_pyramid(spectrogram).sum(axis=-1)
-    pyramid_resynth = utils.resynthesize(pyr)
+    print "constructing Laplacian pyramid"
+    pyr = utils.stft_laplacian_pyramid(spectrogram)
+
+    print "amplifying components of Laplacian pyramid"
+    passband = [0.5, 1.0]
+    fs = 44100 / step
+    gain = 10.0
+    amplified_pyr = utils.amplify_pyramid(pyr, passband=passband, fs=fs, gain=gain)
+
+    print "resynthesizing spectrogram from amplified Laplacian pyramid"
+    pyramid_resynth = utils.resynthesize(amplified_pyr.sum(axis=-1))
     wavfile.write("resynth_pyramid.wav", int(2 * nyq), pyramid_resynth)
 
 #    print "computing remodulated whitened spectrogram"

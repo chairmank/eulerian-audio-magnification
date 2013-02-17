@@ -88,6 +88,17 @@ def laplacian_pyramid(arr, levels=None):
         yield band
         arr = smoothed
 
+def amplify_pyramid(pyr, passband, fs, gain=5.0):
+    tap = firwin(100, passband, nyq=(fs / 2.0), pass_zero=False)
+    (_, num_freqs, levels) = pyr.shape
+    amplified_pyr = np.copy(pyr)
+    for i in xrange(num_freqs):
+        for j in xrange(levels):
+            real_component = filtfilt(tap, [1.0], np.real(pyr[:, i, j]))
+            imag_component = filtfilt(tap, [1.0], np.imag(pyr[:, i, j]))
+            amplified_pyr[:, i, j] += gain * (real_component + 1.0j * imag_component)
+    return amplified_pyr
+
 def resynthesize(spectrogram, window=1024, step=None, n=None):
     """Compute the short-time Fourier transform on a 1-dimensional array
     *signal*, with the specified *window* size, *step* size, and
