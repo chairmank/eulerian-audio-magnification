@@ -79,7 +79,7 @@ def resynthesize(spectrogram, window=1024, step=None, n=None):
     for i in xrange(num_windows):
         snippet = np.real(np.fft.ifft(spectrogram[i, :], window))
         signal[(step * i):(step * i + window)] += snippet
-    signal = 0.85 * signal
+    signal = signal / np.max(np.abs(signal)) * 0x8000 * 0.9
     signal = signal.astype(np.int16)
     return signal
 
