@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.io import wavfile
-from scipy.signal import firwin, lfilter, hamming
+from scipy.signal import firwin, filtfilt, hamming, resample
 
 default_nyquist = 22050.0
 
@@ -56,7 +56,37 @@ def stft(signal, window=1024, step=None, n=None):
     taper = hamming(window)
     for (i, s) in enumerate(window_slice_iterator(length, window, step)):
         out[i, :] = np.fft.fft(signal[s] * taper, n)
+    pyr = stft_laplacian_pyramid(out)
     return out
+
+def stft_laplacian_pyramid(spectrogram, levels=None):
+    """For each window of the spectrogram, construct laplacian pyramid
+    on the real and imaginary components of the FFT.
+    """
+    (num_windows, num_freqs) = spectrogram.shape
+    if levels is None:
+        levels = int(np.log2(num_freqs))
+    # (num_windows, num_frequencies, levels)
+    pyr = np.zeros(spectrogram.shape + (levels,), dtype=np.complex)
+    for i in xrange(num_windows):
+        real_pyr = list(laplacian_pyramid(np.real(spectrogram[i, :]), levels=levels))
+        imag_pyr = list(laplacian_pyramid(np.imag(spectrogram[i, :]), levels=levels))
+        for j in xrange(levels):
+            pyr[i, :, j] = real_pyr[j] + 1.0j * imag_pyr[j]
+    return pyr
+
+def laplacian_pyramid(arr, levels=None):
+    if arr.ndim != 1:
+        raise ValueError("arr must be 1-dimensional")
+    if levels is None:
+        levels = int(np.log2(arr.size))
+    tap = np.array([1.0, 4.0, 6.0, 4.0, 1.0]) / 16.0
+    tap_fft = np.fft.fft(tap, arr.size)
+    for i in xrange(levels):
+        smoothed = np.real(np.fft.ifft(np.fft.fft(arr) * tap_fft))
+        band = arr - smoothed
+        yield band
+        arr = smoothed
 
 def resynthesize(spectrogram, window=1024, step=None, n=None):
     """Compute the short-time Fourier transform on a 1-dimensional array
@@ -79,10 +109,27 @@ def resynthesize(spectrogram, window=1024, step=None, n=None):
     for i in xrange(num_windows):
         snippet = np.real(np.fft.ifft(spectrogram[i, :], window))
         signal[(step * i):(step * i + window)] += snippet
-    signal = signal / np.max(np.abs(signal)) * 0x8000 * 0.9
+    signal = signal[window:]
+    ceiling = np.max(np.abs(signal))
+    signal = signal / ceiling * 0.9 * 0x8000
     signal = signal.astype(np.int16)
     return signal
 
+
+def amplify_modulation(spectrogram, fs, passband=[1.0, 10.0], gain=0.0):
+    (num_windows, num_freqs) = spectrogram.shape
+    envelope = np.abs(spectrogram)
+    amplification = np.ones(envelope.shape)
+    if gain > 0.0:
+        taps = firwin(200, passband, nyq=(fs / 2.0), pass_zero=False)
+        for i in xrange(num_freqs):
+            #amplification[:, i] = envelope[:, i] + gain * filtfilt(
+            #    taps, [1.0], envelope[:, i])
+            amplification[:, i] = gain * filtfilt(
+                taps, [1.0], envelope[:, i])
+    amplification = np.maximum(0.0, amplification)
+    amplified_spectrogram = spectrogram * amplification
+    return amplified_spectrogram
 
 def svd_truncation(spectrogram, k=[0]):
     """Compute SVD of the spectrogram, trunate to *k* components,
@@ -115,15 +162,3 @@ def estimate_spectral_power(spectrogram):
     # compute mean power at each frequency
     power = np.power(np.abs(spectrogram), 2).mean(axis=0)
     return power
-
-
-
-def bandpass_filter_signal(signal, low, high, nyq=default_nyquist):
-    taps = firwin(1024, [low, high], nyq=nyq, pass_zero=False)
-    filtered_signal = lfilter(taps, [1.0], signal).astype(np.int16)
-    return filtered_signal
-
-
-
-
-

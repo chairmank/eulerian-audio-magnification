@@ -12,8 +12,8 @@ from optparse import OptionParser
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option("-s", type="float", dest="start_time", default=13)
-    parser.add_option("-f", type="float", dest="end_time", default=20)
+    parser.add_option("-s", type="float", dest="start_time", default=1)
+    parser.add_option("-f", type="float", dest="end_time", default=16)
     (options, args) = parser.parse_args()
 
     if len(args)==0:
@@ -21,6 +21,9 @@ if __name__ == '__main__':
     else:
 	    filename = args[0]
     print options
+
+    window = 1024
+    step = window / 4
 
     (nyq, signal) = utils.slurp_wav(filename, int(options.start_time * 44100), int(44100 * options.end_time))
     print "computing spectrogram"
@@ -40,18 +43,35 @@ if __name__ == '__main__':
     resynth = utils.resynthesize(unwhitened)
     wavfile.write("resynth.wav", int(2 * nyq), resynth)
 
-    print "computing truncated whitened spectrogram after singular value decomposition"
-    k = [0]
-    #k = range(20)
-    #k = range(1024)
-    truncated_whitened_spectrogram = utils.svd_truncation(whitened, k=k)
+    print "resynthesizing spectrogram from Laplacian pyramid"
+    pyr = utils.stft_laplacian_pyramid(spectrogram).sum(axis=-1)
+    pyramid_resynth = utils.resynthesize(pyr)
+    wavfile.write("resynth_pyramid.wav", int(2 * nyq), pyramid_resynth)
 
-    print "unwhitening truncated spectrum"
-    truncated_spectrogram = truncated_whitened_spectrogram * np.sqrt(power)
-    truncated_spectrogram = utils.normalize_total_power(truncated_spectrogram, utils.total_power(spectrogram))
+#    print "computing remodulated whitened spectrogram"
+#    gain = 5.0
+#    passband = [0.1, 0.5]
+#    remodulated_whitened_spectrogram = utils.amplify_modulation(
+#        whitened, (2.0 * nyq / step), passband=passband, gain=gain)
+#    print "unwhitening remodulated spectrum"
+#    remodulated_spectrogram = remodulated_whitened_spectrogram * np.sqrt(power)
+#    remodulated_spectrogram = utils.normalize_total_power(remodulated_spectrogram, utils.total_power(spectrogram))
+#    print "resynthesizing from unwhitened remodulated spectrogram"
+#    remodulated_resynth = utils.resynthesize(remodulated_spectrogram)
+#    wavfile.write("resynth_remodulated.wav", int(2 * nyq), remodulated_resynth)
 
-    print "resynthesizing from unwhitened truncated spectrogram"
-    truncated_resynth = utils.resynthesize(truncated_spectrogram)
-    wavfile.write("resynth_truncated.wav", int(2 * nyq), truncated_resynth)
+#    print "computing truncated whitened spectrogram after singular value decomposition"
+#    k = [0]
+#    #k = range(20)
+#    #k = range(1024)
+#    truncated_whitened_spectrogram = utils.svd_truncation(whitened, k=k)
+#
+#    print "unwhitening truncated spectrum"
+#    truncated_spectrogram = truncated_whitened_spectrogram * np.sqrt(power)
+#    truncated_spectrogram = utils.normalize_total_power(truncated_spectrogram, utils.total_power(spectrogram))
+#
+#    print "resynthesizing from unwhitened truncated spectrogram"
+#    truncated_resynth = utils.resynthesize(truncated_spectrogram)
+#    wavfile.write("resynth_truncated.wav", int(2 * nyq), truncated_resynth)
 
 
