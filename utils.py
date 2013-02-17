@@ -85,14 +85,10 @@ def whitening_filter(signal, nyq=default_nyquist, band=[20, 20000]):
     pass
 
 
-def bandpass_filter(f1, f2, nyq=default_nyquist):
-    """Construct a finite impulse response filter."""
-    return firwin(1024, [f1, f2], nyq=nyq, pass_zero=False)
-
-
-def filter_signal(signal, f1, f2, nyq=default_nyquist):
-    taps = bandpass_filter(f1, f2, nyq=nyq)
+def bandpass_filter_signal(signal, low, high, nyq=default_nyquist):
+    taps = firwin(1024, [low, high], nyq=nyq, pass_zero=False)
     filtered_signal = lfilter(taps, [1.0], signal)
+    return filtered_signal
 
 
 
